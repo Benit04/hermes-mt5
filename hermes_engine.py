@@ -5,6 +5,10 @@ import time
 from collections import deque
 from datetime import datetime, timezone, timedelta
 import pandas as pd
+
+
+
+
 try:
     import MetaTrader5 as mt5 
     except ImportError:
