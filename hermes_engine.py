@@ -16,7 +16,9 @@ SAST = timezone(timedelta(hours=2))
 
 
 class HermesEngine:
-    def __init__(self):
+    def __init__(self, key_validator=None, **kwargs):
+        self.key_validator = key_validator
+        self.extra_config = kwargs
         self.lock = threading.Lock()
         self.live_feed = deque(maxlen=200)
         self.status = "Idle"
