@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hermes Admin - Product Key Manager</title>
+  <style>
+    body { margin: 0; background: #0b0f17; color: #e6edf3; font-family: Arial, sans-serif; }
+    .wrap { max-width: 960px; margin: auto; padding: 22px 20px; }
+    .card { background: #131a26; border: 1px solid #263245; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+    input, select { padding: 9px; border-radius: 6px; border: 1px solid #263245; background: #0d1117; color: #e6edf3; margin-right: 8px; margin-top: 6px; }
+    .btn { padding: 9px 14px; border: none; border-radius: 6px; background: #2ea043; color: #fff; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; font-size: 0.88rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.88rem; }
+    th, td { border-bottom: 1px solid #263245; padding: 9px; text-align: left; }
+    code { background: #0d1117; padding: 3px 7px; border-radius: 4px; color: #58a6ff; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h2>Hermes Product Key Generator</h2>
+    <a href="/" style="color:#58a6ff;">&larr; Master File</a>
+  </div>
+
+  {% if not unlocked %}
+  <div class="card">
+    <form method="post">
+      <label>Enter Admin PIN:</label><br>
+      <input type="password" name="pin" placeholder="Admin PIN" required />
+      <button class="btn" type="submit">Unlock</button>
+      {% if error %}<p style="color:#ffa198;">{{ error }}</p>{% endif %}
+    </form>
+  </div>
+  {% else %}
+  <div class="card">
+    <h3 style="margin-top:0;">Generate Product Key</h3>
+    <form method="post">
+      <input type="hidden" name="action" value="generate" />
+      <input type="text" name="buyer_email" placeholder="Buyer email or WhatsApp note" required />
+      <select name="plan">
+        <option value="24-Hour Trial">24-Hour Trial</option>
+        <option value="Monthly">Monthly (30 days)</option>
+        <option value="3-Month">3-Month (90 days)</option>
+        <option value="Lifetime">Lifetime</option>
+      </select>
+      <button class="btn" type="submit">Generate Key</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Generated Keys ({{ keys|length }})</h3>
+    <table>
+      <thead>
+        <tr><th>Key</th><th>Buyer</th><th>Plan</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for k in keys %}
+        <tr>
+          <td><code>{{ k.key }}</code></td>
+          <td>{{ k.buyer_email }}</td>
+          <td>{{ k.plan }}</td>
+          <td>{{ k.expires_at if k.expires_at else 'Never' }}</td>
+          <td>{{ 'ACTIVE' if k.active else 'DISABLED' }}</td>
+          <td style="display:flex; gap:6px; flex-wrap:wrap;">
+            <a class="btn" style="background:#1f6feb;" href="mailto:{{ k.buyer_email }}?subject=Your%20Hermes%20Product%20Key%20({{ k.plan }})&body=Hi%2C%0A%0AYour%20Hermes%20Product%20Key%20is%3A%20{{ k.key }}%0APlan%3A%20{{ k.plan }}%0AExpires%3A%20{{ k.expires_at if k.expires_at else 'Never' }}%0A%0AReminder%3A%20This%20robot%20makes%20mistakes%20and%20carries%20trading%20risk.%20When%20your%20period%20ends%2C%20the%20key%20expires%20and%20must%20be%20renewed.%0A%0ASupport%20WhatsApp%3A%20081%20311%208398">Email Key</a>
+            <form method="post" style="margin:0;">
+              <input type="hidden" name="action" value="toggle" />
+              <input type="hidden" name="key" value="{{ k.key }}" />
+              <button class="btn" style="background:#30363d;" type="submit">{{ 'Disable' if k.active else 'Enable' }}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">No keys generated yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>
