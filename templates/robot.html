@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hermes Robot - Live Terminal</title>
+  <style>
+    body { margin: 0; background: #0b0f17; color: #e6edf3; font-family: Arial, sans-serif; }
+    .wrap { max-width: 960px; margin: auto; padding: 22px 20px; }
+    .top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #263245; padding-bottom: 14px; margin-bottom: 18px; }
+    a { color: #58a6ff; text-decoration: none; }
+    .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 18px; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: #131a26; border: 1px solid #263245; border-radius: 8px; padding: 18px; }
+    label { display: block; font-size: 0.9rem; color: #9aa7b8; margin-top: 10px; }
+    input, select { width: 100%; padding: 9px; margin-top: 4px; border-radius: 6px; border: 1px solid #263245; background: #0d1117; color: #e6edf3; box-sizing: border-box; }
+    .btn { width: 100%; padding: 11px; margin-top: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #fff; background: #2ea043; }
+    .btn-stop { background: #da3633; }
+    .alert { padding: 11px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 0.92rem; }
+    .err { background: rgba(218,54,51,0.18); border: 1px solid #da3633; color: #ffa198; }
+    .ok { background: rgba(46,160,67,0.18); border: 1px solid #2ea043; color: #7ee787; }
+    .warn { background: rgba(210,153,34,0.14); border: 1px solid #d29922; color: #f2cc60; padding: 10px 12px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; }
+    .console { background: #070a0f; border: 1px solid #263245; border-radius: 6px; padding: 12px; height: 370px; overflow-y: auto; font-family: Consolas, monospace; font-size: 0.84rem; }
+    .log-row { padding: 6px 0; border-bottom: 1px solid #161e2c; }
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: #1f6feb; color: #fff; margin-right: 6px; }
+    .stats { font-size: 0.88rem; margin-bottom: 10px; color: #9aa7b8; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <strong>HERMES ROBOT PORTAL (1% RULE ENGINE)</strong>
+    <a href="/">&larr; Back to Master File</a>
+  </div>
+
+  <div class="warn">
+    <strong>Warning:</strong> This robot makes mistakes and can lose money. Always test on a Demo account first and only trade risk capital you can afford to lose.
+  </div>
+
+  {% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+  {% if message %}<div class="alert ok">{{ message }}</div>{% endif %}
+
+  <div class="grid">
+    <div class="card">
+      <h3 style="margin-top:0;">Activate and Connect MT5</h3>
+      <form method="post">
+        <label>Product Key</label>
+        <input type="text" name="product_key" placeholder="HERMES-XXXX-XXXX-XXXX" required />
+
+        <label>MT5 Account Login (Demo or Real)</label>
+        <input type="text" name="mt5_login" placeholder="e.g. 50123456" required />
+
+        <label>MT5 Password</label>
+        <input type="password" name="mt5_password" placeholder="Your MT5 account password" required />
+
+        <label>Broker Server Name</label>
+        <input type="text" name="mt5_server" placeholder="e.g. Exness-MT5Trial7" required />
+
+        <label>Trading Pair</label>
+        <select name="symbol">
+          <option value="EURUSD">EURUSD</option>
+          <option value="GBPUSD">GBPUSD</option>
+          <option value="USDJPY">USDJPY</option>
+          <option value="XAUUSD">XAUUSD (Gold)</option>
+        </select>
+
+        <p style="font-size:0.84rem; color:#9aa7b8; margin-top:10px;">
+          Risk Lock: <strong>1.0% Max Per Trade</strong> | Hard SL: <strong>25 Pips</strong> | Target: <strong>1:2 RR</strong>
+        </p>
+
+        <button class="btn" type="submit" name="action" value="start">Start Hermes Auto-Trader</button>
+      </form>
+
+      <form method="post">
+        <button class="btn btn-stop" type="submit" name="action" value="stop">Stop Robot</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Live Background Activity</h3>
+      <div class="stats" id="account-stats">Waiting for MT5 connection...</div>
+      <div class="console" id="live-console"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function refreshStatus() {
+    try {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      const statsEl = document.getElementById('account-stats');
+      const consoleEl = document.getElementById('live-console');
+
+      if (data.account && data.account.login) {
+        statsEl.innerHTML = `Mode: <strong>${data.account.mode}</strong> | Login: <strong>${data.account.login}</strong> | Balance: <strong>${data.account.balance} ${data.account.currency}</strong> | Equity: <strong>${data.account.equity}</strong> | DD: <strong>${data.account.drawdown_pct}%</strong>`;
+      }
+
+      if (data.feed && data.feed.length > 0) {
+        consoleEl.innerHTML = data.feed.map(item =>
+          `<div class="log-row"><span style="color:#8b949e;">[${item.time}]</span> <span class="badge">${item.stage}</span> ${item.message}</div>`
+        ).join('');
+      }
+    } catch (e) {}
+  }
+  setInterval(refreshStatus, 3000);
+  refreshStatus();
+</script>
+</body>
+</html>
